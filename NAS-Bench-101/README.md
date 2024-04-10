@@ -6,7 +6,6 @@ The metrics computation is modified to implement the epsilon metric.
 ## Usage 
 
 Download the NASbench101 data (see https://github.com/google-research/nasbench) \
-Download the NASbench201 data (see https://github.com/D-X-Y/NAS-Bench-201)
 
 Reproduce all of the results by running `Reproduce.ipynb` notebook.\
 Reproduce all the plots by running `Plots_and_Tables.ipynb` notebook.\
