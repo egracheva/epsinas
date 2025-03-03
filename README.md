@@ -9,8 +9,8 @@ This repository contains the code reproducing our results. It may also help you 
 <h3> Quick Links: </h3>
 
 [**Summary**](#summary)
-[**Setup**](#data)
-[**Data**](#documentation)
+[**Setup**](#setup)
+[**Data**](#data)
 
 # Summary
 
