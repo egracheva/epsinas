@@ -17,7 +17,7 @@ from pycls.core.timer import Timer
 logger = logging.get_logger(__name__)
 
 
-@torch.no_grad()
+@torch.inference_mode()
 def compute_time_eval(model):
     """Computes precise model forward test time using dummy data."""
     # Use eval mode

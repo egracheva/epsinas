@@ -49,7 +49,7 @@ class TinyNetwork(nn.Module):
         return ('{name}(C={_C}, N={_layerN}, L={_Layer})'.format(name=self.__class__.__name__, **self.__dict__))
 
     def forward(self, inputs):
-        with torch.no_grad():
+        with torch.inference_mode():
             feature = self.stem(inputs)
             for i, cell in enumerate(self.cells):
                 feature = cell(feature)

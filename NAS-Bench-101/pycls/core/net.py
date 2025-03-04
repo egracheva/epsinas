@@ -31,7 +31,7 @@ def init_weights(m):
         m.bias.data.zero_()
 
 
-@torch.no_grad()
+@torch.inference_mode()
 def compute_precise_bn_stats(model, loader):
     """Computes precise BN stats on training data."""
     # Compute the number of minibatches to use

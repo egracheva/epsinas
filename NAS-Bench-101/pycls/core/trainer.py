@@ -229,7 +229,7 @@ def search_epoch(train_loader, model, loss_fun, optimizer, train_meter, cur_epoc
     logger.info(F.softmax(m.net_.alphas_reduce, dim=-1))
 
 
-@torch.no_grad()
+@torch.inference_mode()
 def test_epoch(test_loader, model, test_meter, cur_epoch):
     """Evaluates the model on the test set."""
     # Enable eval mode

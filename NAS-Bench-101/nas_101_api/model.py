@@ -60,7 +60,7 @@ class Network(nn.Module):
 #         self._initialize_weights()
 
     def forward(self, x, get_ints=True):
-        with torch.no_grad(): 
+        with torch.inference_mode(): 
             ints = []
             for _, layer in enumerate(self.layers):
                 x = layer(x)

@@ -27,7 +27,7 @@ class LabelSmoothedCrossEntropyLoss(torch.nn.Module):
 
     def forward(self, logits, target):
         pred = logits.log_softmax(dim=-1)
-        with torch.no_grad():
+        with torch.inference_mode():
             target_dist = torch.ones_like(pred) * self.eps / (self.num_classes - 1)
             target_dist.scatter_(-1, target.unsqueeze(-1), 1 - self.eps)
         return (-target_dist * pred).sum(dim=-1).mean()
