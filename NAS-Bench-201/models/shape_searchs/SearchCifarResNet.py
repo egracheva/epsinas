@@ -339,7 +339,7 @@ class SearchShapeCifarResNet(nn.Module):
     channels = [3]
     for i, weight in enumerate(self.width_attentions):
       if mode == 'genotype':
-        with torch.no_grad():
+        with torch.inference_mode():
           probe = nn.functional.softmax(weight, dim=0)
           C = self.Ranges[i][ torch.argmax(probe).item() ]
       elif mode == 'max':
@@ -348,7 +348,7 @@ class SearchShapeCifarResNet(nn.Module):
         C = int( math.sqrt( extra_info ) * self.Ranges[i][-1] )
       elif mode == 'random':
         assert isinstance(extra_info, float), 'invalid extra_info : {:}'.format(extra_info)
-        with torch.no_grad():
+        with torch.inference_mode():
           prob = nn.functional.softmax(weight, dim=0)
           approximate_C = int( math.sqrt( extra_info ) * self.Ranges[i][-1] )
           for j in range(prob.size(0)):
@@ -359,13 +359,13 @@ class SearchShapeCifarResNet(nn.Module):
       channels.append( C )
     # select depth
     if mode == 'genotype':
-      with torch.no_grad():
+      with torch.inference_mode():
         depth_probs = nn.functional.softmax(self.depth_attentions, dim=1)
         choices = torch.argmax(depth_probs, dim=1).cpu().tolist()
     elif mode == 'max' or mode == 'fix':
       choices = [depth_probs.size(1)-1 for _ in range(depth_probs.size(0))]
     elif mode == 'random':
-      with torch.no_grad():
+      with torch.inference_mode():
         depth_probs = nn.functional.softmax(self.depth_attentions, dim=1)
         choices = torch.multinomial(depth_probs, 1, False).cpu().tolist()
     else:
@@ -401,7 +401,7 @@ class SearchShapeCifarResNet(nn.Module):
     string = "for depth and width, there are {:} + {:} attention probabilities.".format(len(self.depth_attentions), len(self.width_attentions))
     string+= '\n{:}'.format(self.depth_info)
     discrepancy = []
-    with torch.no_grad():
+    with torch.inference_mode():
       for i, att in enumerate(self.depth_attentions):
         prob = nn.functional.softmax(att, dim=0)
         prob = prob.cpu() ; selc = prob.argmax().item() ; prob = prob.tolist()
@@ -451,7 +451,7 @@ class SearchShapeCifarResNet(nn.Module):
     flop_depth_probs = torch.flip( torch.cumsum( torch.flip(flop_depth_probs, [1]), 1 ), [1] )
     selected_widths, selected_width_probs = select2withP(self.width_attentions, self.tau)
     selected_depth_probs = select2withP(self.depth_attentions, self.tau, True)
-    with torch.no_grad():
+    with torch.inference_mode():
       selected_widths = selected_widths.cpu()
 
     x, last_channel_idx, expected_inC, flops = inputs, 0, 3, []

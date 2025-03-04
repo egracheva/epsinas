@@ -54,7 +54,7 @@ class TinyNetworkDarts(nn.Module):
     return [self.arch_parameters]
 
   def show_alphas(self):
-    with torch.no_grad():
+    with torch.inference_mode():
       return 'arch-parameters :\n{:}'.format( nn.functional.softmax(self.arch_parameters, dim=-1).cpu() )
 
   def get_message(self):
@@ -72,7 +72,7 @@ class TinyNetworkDarts(nn.Module):
       xlist = []
       for j in range(i):
         node_str = '{:}<-{:}'.format(i, j)
-        with torch.no_grad():
+        with torch.inference_mode():
           weights = self.arch_parameters[ self.edge2index[node_str] ]
           op_name = self.op_names[ weights.argmax().item() ]
         xlist.append((op_name, j))

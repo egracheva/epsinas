@@ -63,7 +63,7 @@ def search_weights(x, searchspace, device):
                                     fill_weight = False
                             if fill_weight:
                                 torch.nn.init.constant_(m.weight, weight)
-
+                    
                     network.apply(initialize_resnet)
                     y_pred, _ = network(x)
                     pred = y_pred.cpu().detach().numpy().flatten()
@@ -79,10 +79,6 @@ def search_weights(x, searchspace, device):
                 mean = np.nanmean(preds)
                 score = mae/mean
                 
-#                 mae = np.abs(preds[0,:]-preds[1,:])
-#                 mean = np.mean(preds, axis=0)
-#                 score = np.nanmean(mae/mean)
-                
                 scores.append(score)
             # Verify how many architectures got NaN scores
             print(weights, np.sum(np.isnan(scores))/len(scores))
@@ -91,7 +87,7 @@ def search_weights(x, searchspace, device):
         window_size -= 1
 ##
 
-def epsilon_main(data, space_name, searchspace, n_archs, weights, device, args):
+def epsinas_main(data, space_name, searchspace, n_archs, weights, device, args):
     if '101' in space_name:
         accs_min = []
         accs_max = []
@@ -143,20 +139,10 @@ def epsilon_main(data, space_name, searchspace, n_archs, weights, device, args):
         
         score.append(mae/mean)
         nparams.append(sum(p.numel() for p in network.parameters()))
-        if '101' in space_name:
-            accs.append(searchspace.get_final_accuracy(uid, args.acc_type, args.trainval)[0])
-            accs_min.append(searchspace.get_final_accuracy(uid, args.acc_type, args.trainval)[1])
-            accs_max.append(searchspace.get_final_accuracy(uid, args.acc_type, args.trainval)[2]) 
-        else:
-            accs.append(searchspace.get_final_accuracy(uid, args.acc_type, args.trainval))
+        accs.append(searchspace.get_final_accuracy(uid, args.acc_type, args.trainval))
         
     save_dic = {}
-    if '101' in space_name:
-        save_dic["accs_min"] = accs_min
-        save_dic["accs_max"] = accs_max
-        save_dic["accs_mean"] = accs
-    else:
-        save_dic["accs"] = accs
+    save_dic["accs"] = accs
     save_dic["score"] = score
     save_dic["nparams"] = nparams
     
@@ -178,13 +164,94 @@ def prepare_recepies():
     return r_dic
 ##
 
+def steiger_z_test(xy, xz, yz, n, conf_level=0.95):
+    """
+    Function for calculating the statistical significant differences between
+    two dependent correlation coefficients.
+    Adopted from the R package http://personality-project.org/r/html/paired.r.html
+    and is described in detail in the book 'Statistical Methods for Psychology'
+    Credit goes to the authors of above mentioned packages!
+    Author: Philipp Singer (www.philippsinger.info)
+    #copied from on 4/24/2015 from https://github.com/psinger/CorrelationStats/blob/master/corrstats.py
+
+    Calculates the statistic significance between two dependent correlation coefficients
+    @param xy: correlation coefficient between x and y
+    @param xz: correlation coefficient between x and z
+    @param yz: correlation coefficient between y and z
+    @param n: number of elements in x, y and z
+    @param twotailed: whether to calculate a one or two tailed test, only works for 'steiger' method
+    @param conf_level: confidence level, only works for 'zou' method
+    @param method: defines the method uses, 'steiger' or 'zou'
+    @return: t and p-val
+    """
+    
+    d = xy - xz
+    determin = 1 - xy * xy - xz * xz - yz * yz + 2 * xy * xz * yz
+    av = (xy + xz)/2
+    cube = (1 - yz) * (1 - yz) * (1 - yz)
+
+    t2 = d * np.sqrt((n - 1) * (1 + yz)/(((2 * (n - 1)/(n - 3)) * determin + av * av * cube)))
+    p = 1 - stats.t.cdf(abs(t2), n - 2)
+    
+    # For two-tailed p-value
+    p *= 2
+
+    return t2, p
+##
+
+def compute_epsinas(x, network, weights):
+    preds = []
+    for weight in weights:
+        torch.cuda.empty_cache()
+        
+        def initialize_weights(m):
+            
+            fill_bias = False
+            if hasattr(m, 'bias'):
+                if m.bias is not None:
+                    fill_bias = True
+
+            if fill_bias:
+                torch.nn.init.constant_(m.bias, 0)
+
+            fill_weight = False
+            
+            if hasattr(m, 'weight'):
+                fill_weight = True
+
+            if hasattr(m, 'affine'):
+                if not m.affine:
+                    fill_weight = False
+
+            if fill_weight:
+                torch.nn.init.constant_(m.weight, weight)
+
+        prepare_seed(21)
+        network.apply(initialize_weights)
+        y_pred, _ = network(x)
+        pred = y_pred.cpu().detach().numpy().flatten()
+        pred_min = np.nanmin(pred)
+        pred_max = np.nanmax(pred)
+        pred_norm = (pred - pred_min)/(pred_max - pred_min)
+        preds.append(pred_norm)
+
+    # Compute the score
+    preds = np.array(preds)
+    preds[np.where(preds==0.)] = np.nan
+    mae = np.abs(preds[0,:]-preds[1,:])
+    score = np.nanmean(mae)/np.nanmean(preds)
+    
+    return score
+##
+
+
 def compute_stats(score, accs, reverse=False, raw=False):
     # Take care when the scoring model performance metric should be minimized (perplexity, RMSE)
     if reverse:
         accs = -np.array(accs)
 
     # Take care of NaN entries for accurate stats calculations
-    nonan = ~np.isnan(score) & ~np.isnan(accs) & (np.array(score)>0)
+    nonan = ~np.isnan(score) & ~np.isnan(accs)# & (np.array(score)>0)
 
     accs_nonan = np.array(accs)[nonan]
     score_nonan = np.array(score)[nonan]
@@ -272,7 +339,7 @@ def plot_results(score, accs, save_dir, save_name, accs_min=None, accs_max=None,
 
     plt.grid(color='#dbdbd9', linewidth=0.5)
     plt.xlabel('Test Accuracy', fontsize = 22)
-    plt.ylabel('epsilon', fontsize = 22)
+    plt.ylabel('epsinas', fontsize = 22)
     plt.savefig(save_dir + file_name + '.pdf',
                 bbox_inches='tight', 
                 dpi=300,
@@ -280,9 +347,10 @@ def plot_results(score, accs, save_dir, save_name, accs_min=None, accs_max=None,
     plt.show()
 ##
 
-def bs_ablation_plots(exp_list, name, filename, title):
+def bs_ablation_plots(exp_list, name, filename, dataset):
     fig = plt.figure(figsize=(7.2,4.45))
     ax = fig.add_subplot(111)
+    
     def plot_exp(exp, label):
         exp = np.array(exp)
         q_75 = np.nanquantile(exp, .75, axis=1)
@@ -295,10 +363,19 @@ def bs_ablation_plots(exp_list, name, filename, title):
         for item in ([ax.title, ax.xaxis.label, ax.yaxis.label] +
                      ax.get_xticklabels() + ax.get_yticklabels()):
             item.set_fontsize(16)
-    for exp,ename in exp_list:
-        plot_exp(exp,ename)
+            
+    for exp, ename in exp_list:
+        plot_exp(exp, ename)
     plt.grid()
     plt.xlabel('Batch size', fontsize=22)
+    
+    if dataset=='cifar10':
+        title = 'CIFAR-10'
+    elif dataset=='cifar100':
+        title = 'CIFAR-100'
+    else:
+        title = dataset
+        
     if name=='rho':
         plt.ylabel(r'Spearman $\rho$', fontsize=22)
     elif name=='tau':
@@ -310,50 +387,4 @@ def bs_ablation_plots(exp_list, name, filename, title):
                 dpi=300,
                 format='pdf')
     plt.show()
-##
-
-def compute_epsilon(x, network, weights):
-    # The initial window spans between 1e-10 and 1e+5
-    preds = []
-    for weight in weights:
-        torch.cuda.empty_cache()
-        
-        def initialize_weights(m):
-            
-            fill_bias = False
-            if hasattr(m, 'bias'):
-                if m.bias is not None:
-                    fill_bias = True
-
-            if fill_bias:
-                torch.nn.init.constant_(m.bias, 0)
-
-            fill_weight = False
-            
-            if hasattr(m, 'weight'):
-                fill_weight = True
-
-            if hasattr(m, 'affine'):
-                if not m.affine:
-                    fill_weight = False
-
-            if fill_weight:
-                torch.nn.init.constant_(m.weight, weight)
-
-        prepare_seed(21)
-        network.apply(initialize_weights)
-        y_pred, _ = network(x)
-        pred = y_pred.cpu().detach().numpy().flatten()
-        pred_min = np.nanmin(pred)
-        pred_max = np.nanmax(pred)
-        pred_norm = (pred - pred_min)/(pred_max - pred_min)
-        preds.append(pred_norm)
-
-    # Compute the score
-    preds = np.array(preds)
-    preds[np.where(preds==0.)] = np.nan
-    mae = np.abs(preds[0,:]-preds[1,:])
-    score = np.nanmean(mae)/np.nanmean(preds)
-    
-    return score
 ##

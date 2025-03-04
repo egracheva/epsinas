@@ -55,7 +55,7 @@ class NASNetworkDARTS(nn.Module):
     return [self.arch_normal_parameters, self.arch_reduce_parameters]
 
   def show_alphas(self) -> Text:
-    with torch.no_grad():
+    with torch.inference_mode():
       A = 'arch-normal-parameters :\n{:}'.format( nn.functional.softmax(self.arch_normal_parameters, dim=-1).cpu() )
       B = 'arch-reduce-parameters :\n{:}'.format( nn.functional.softmax(self.arch_reduce_parameters, dim=-1).cpu() )
     return '{:}\n{:}'.format(A, B)
@@ -84,7 +84,7 @@ class NASNetworkDARTS(nn.Module):
         selected_edges = edges[:2]
         gene.append( tuple(selected_edges) )
       return gene
-    with torch.no_grad():
+    with torch.inference_mode():
       gene_normal = _parse(torch.softmax(self.arch_normal_parameters, dim=-1).cpu().numpy())
       gene_reduce = _parse(torch.softmax(self.arch_reduce_parameters, dim=-1).cpu().numpy())
     return {'normal': gene_normal, 'normal_concat': list(range(2+self._steps-self._multiplier, self._steps+2)),

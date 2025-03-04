@@ -295,7 +295,7 @@ class SearchWidthCifarResNet(nn.Module):
     channels = [3]
     for i, weight in enumerate(self.width_attentions):
       if mode == 'genotype':
-        with torch.no_grad():
+        with torch.inference_mode():
           probe = nn.functional.softmax(weight, dim=0)
           C = self.Ranges[i][ torch.argmax(probe).item() ]
       elif mode == 'max':
@@ -304,7 +304,7 @@ class SearchWidthCifarResNet(nn.Module):
         C = int( math.sqrt( extra_info ) * self.Ranges[i][-1] )
       elif mode == 'random':
         assert isinstance(extra_info, float), 'invalid extra_info : {:}'.format(extra_info)
-        with torch.no_grad():
+        with torch.inference_mode():
           prob = nn.functional.softmax(weight, dim=0)
           approximate_C = int( math.sqrt( extra_info ) * self.Ranges[i][-1] )
           for j in range(prob.size(0)):
@@ -331,7 +331,7 @@ class SearchWidthCifarResNet(nn.Module):
   def get_arch_info(self):
     string = "for width, there are {:} attention probabilities.".format(len(self.width_attentions))
     discrepancy = []
-    with torch.no_grad():
+    with torch.inference_mode():
       for i, att in enumerate(self.width_attentions):
         prob = nn.functional.softmax(att, dim=0)
         prob = prob.cpu() ; selc = prob.argmax().item() ; prob = prob.tolist()
@@ -365,7 +365,7 @@ class SearchWidthCifarResNet(nn.Module):
   def search_forward(self, inputs):
     flop_probs = nn.functional.softmax(self.width_attentions, dim=1)
     selected_widths, selected_probs = select2withP(self.width_attentions, self.tau)
-    with torch.no_grad():
+    with torch.inference_mode():
       selected_widths = selected_widths.cpu()
 
     x, last_channel_idx, expected_inC, flops = inputs, 0, 3, []

@@ -50,7 +50,7 @@ def copy_basic(module, init):
 
 
 def init_from_model(network, init_model):
-  with torch.no_grad():
+  with torch.inference_mode():
     copy_fc(network.classifier, init_model.classifier)
     for base, target in zip(init_model.layers, network.layers):
       assert type(base).__name__  == type(target).__name__, 'invalid type : {:} vs {:}'.format(base, target)

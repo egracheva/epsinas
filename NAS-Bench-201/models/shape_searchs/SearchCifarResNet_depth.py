@@ -223,13 +223,13 @@ class SearchDepthCifarResNet(nn.Module):
     if config_dict is not None: config_dict = config_dict.copy()
     # select depth
     if mode == 'genotype':
-      with torch.no_grad():
+      with torch.inference_mode():
         depth_probs = nn.functional.softmax(self.depth_attentions, dim=1)
         choices = torch.argmax(depth_probs, dim=1).cpu().tolist()
     elif mode == 'max':
       choices = [depth_probs.size(1)-1 for _ in range(depth_probs.size(0))]
     elif mode == 'random':
-      with torch.no_grad():
+      with torch.inference_mode():
         depth_probs = nn.functional.softmax(self.depth_attentions, dim=1)
         choices = torch.multinomial(depth_probs, 1, False).cpu().tolist()
     else:
@@ -262,7 +262,7 @@ class SearchDepthCifarResNet(nn.Module):
     string = "for depth, there are {:} attention probabilities.".format(len(self.depth_attentions))
     string+= '\n{:}'.format(self.depth_info)
     discrepancy = []
-    with torch.no_grad():
+    with torch.inference_mode():
       for i, att in enumerate(self.depth_attentions):
         prob = nn.functional.softmax(att, dim=0)
         prob = prob.cpu() ; selc = prob.argmax().item() ; prob = prob.tolist()
