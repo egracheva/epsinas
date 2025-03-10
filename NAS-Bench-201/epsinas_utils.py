@@ -14,8 +14,6 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 from matplotlib.ticker import MaxNLocator
 
-import models
-
 def prepare_seed(rand_seed):
     torch.manual_seed(rand_seed)
     torch.cuda.manual_seed(rand_seed)
