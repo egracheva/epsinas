@@ -37,11 +37,13 @@ pip install -e .
 
 # Data
 
-## `epsinas` reslease data
+## `epsinas` release data
 
 All the results of our study, including figures and data-files for each ablation study can be downloaded from here:
 
-link
+https://drive.google.com/file/d/1eEWo4KEUEkQZcBOpzlj6xGV8ESPNYrRh
+
+Size: ~330 MB
 
 Unzip the contents into the root (epsinas/epsinas-release-data). This data can be used to reproduce the figures and tables reported in the paper.
 
@@ -69,7 +71,9 @@ Please place the file in the `epsinas/NAS-Bench-201/api` directory.
 Download the image data from [Google drive](https://drive.google.com/drive/folders/1L0Lzq8rWpZLPfiQGd6QR8q5xLV88emU7) and put it into the `epsinas/NAS-Bench-201/datasets` directory.
 
 ### NAS-Bench-NLP
-To be updated...
+
+Download the [data.zip](https://drive.google.com/file/d/1eEWo4KEUEkQZcBOpzlj6xGV8ESPNYrRh), [train_logs_single_run.zip](https://drive.google.com/file/d/1GeydyYJ2o_j72cRhSicRH5Qk1W-tPrJ3) and [train_logs_multi_runs.zip](https://drive.google.com/file/d/1GE6MXjuUGX5X0iGn0LZ0Tp8GQ7uHdFGl) files.
+Unzip them into the `data`, `train_logs_single_run`, `train_logs_multi_runs` directories, respectively.
 
 # Reproducibility
 
@@ -90,7 +94,7 @@ Reproduce all of the results by running the Notebooks in the corresponding direc
 - NAS-Bench-NLP
   -- Reproduce.ipynb reproduces **epsinas** metric computation for the whole search space
   -- Graphics.ipynb reproduces figures and tables reported in the paper
-  -- Ablation.ipynb reproduces our ablation studies on weights and embeddings
+  -- Ablation.ipynb reproduces our ablation studies on weights, embeddings and batch size
 ```
 
 For each space, `epsinas` implementation can be found in the `epsinas-utils.py` file.
