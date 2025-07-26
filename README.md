@@ -52,10 +52,6 @@ All the results of our study, including figures and data-files for each ablation
 
 Size: ~330 MB
 
-Note: There is no need to download the data to reproduce our results.  
-The required files are automatically loaded within the code.  
-However, you **will** need the benchmark NAS data and the datasets used for training (see below).
-
 ### Benchmark data
 
 #### NAS-Bench-101
@@ -80,7 +76,7 @@ Download the image data from [Google drive](https://drive.google.com/drive/folde
 
 #### NAS-Bench-NLP
 
-Download the [data.zip](https://drive.google.com/file/d/1eEWo4KEUEkQZcBOpzlj6xGV8ESPNYrRh), [train_logs_single_run.zip](https://drive.google.com/file/d/1GeydyYJ2o_j72cRhSicRH5Qk1W-tPrJ3) and [train_logs_multi_runs.zip](https://drive.google.com/file/d/1GE6MXjuUGX5X0iGn0LZ0Tp8GQ7uHdFGl) files.
+Download the [data.zip](https://huggingface.co/datasets/egracheva/epsinas-release-data/blob/main/NAS-Bench-NLP/data.zip), [train_logs_single_run.zip](https://huggingface.co/datasets/egracheva/epsinas-release-data/blob/main/NAS-Bench-NLP/train_logs_single_run.zip)and [train_logs_multi_runs.zip](https://huggingface.co/datasets/egracheva/epsinas-release-data/blob/main/NAS-Bench-NLP/train_logs_multiple_runs.zip) files.
 Unzip them into the `data`, `train_logs_single_run`, `train_logs_multi_runs` directories, respectively.
 
 ## Reproducibility
